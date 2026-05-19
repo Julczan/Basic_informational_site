@@ -1,8 +1,13 @@
 const http = require("node:http");
 const EventEmitter = require("node:events");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const indexPath = path.resolve("index.html");
+
 const eventEmitter = new EventEmitter();
 
-const server = http
+http
   .createServer((request, response) => {
     const { headers, method, url } = request;
     let body = [];
@@ -22,13 +27,14 @@ const server = http
 
         response.writeHead(200, { "Content-Type": "text/html" });
 
-        if (url === "/hello") {
-          response.end(
-            "<html><body><h1>It feels good to be back</h1></body></html>",
-          );
-          return;
-        }
-        response.end("<html><body><h1>Hello, World!</h1></body></html>");
+        fs.readFile(indexPath, "utf8", (err, data) => {
+          if (err) {
+            console.log(err);
+            return;
+          }
+
+          response.end(data);
+        });
       });
   })
   .listen(8080);
