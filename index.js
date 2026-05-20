@@ -28,10 +28,9 @@ http
           console.error(err);
         });
 
-        response.writeHead(200, { "Content-Type": "text/html" });
-
         switch (url) {
           case "/":
+            response.writeHead(200, { "content-type": "text/html" });
             fs.readFile(indexPath, "utf8", (err, data) => {
               if (err) {
                 console.log(err);
@@ -40,9 +39,11 @@ http
 
               response.end(data);
             });
+
             break;
 
           case "/about":
+            response.writeHead(200, { "content-type": "text/html" });
             fs.readFile(aboutPath, "utf8", (err, data) => {
               if (err) {
                 console.log(err);
@@ -63,6 +64,7 @@ http
             break;
           default:
             fs.readFile(errorPath, "utf8", (err, data) => {
+              response.writeHead(404, { "content-type": "text/html" });
               if (err) {
                 console.log(err);
                 return;
