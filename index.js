@@ -1,18 +1,31 @@
 const http = require("node:http");
-const EventEmitter = require("node:events");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const indexPath = path.resolve("index.html");
-const aboutPath = path.resolve("about.html");
-const contactPath = path.resolve("contact-me.html");
 const errorPath = path.resolve("404.html");
 
-const eventEmitter = new EventEmitter();
+function getFile(url) {
+  if (url === "/") {
+    return path.join(process.cwd() + "/index.html");
+  }
+  if (url === "/about") {
+    return path.join(process.cwd() + "/about.html");
+  }
+  if (url === "/contact-me") {
+    return path.join(process.cwd() + "/contact-me.html");
+  }
+}
+
+const page404 = fs.readFileSync(errorPath, "utf8", (err, data) => {
+  if (err) {
+    console.log(err);
+    return;
+  }
+  return data;
+});
 
 http
   .createServer((request, response) => {
-    const { headers, method, url } = request;
     let body = [];
     request
       .on("error", (err) => {
@@ -28,51 +41,27 @@ http
           console.error(err);
         });
 
-        switch (url) {
-          case "/":
-            response.writeHead(200, { "content-type": "text/html" });
-            fs.readFile(indexPath, "utf8", (err, data) => {
-              if (err) {
-                console.log(err);
-                return;
-              }
+        let pathname = "";
 
-              response.end(data);
-            });
+        pathname += getFile(request.url);
 
-            break;
-
-          case "/about":
-            response.writeHead(200, { "content-type": "text/html" });
-            fs.readFile(aboutPath, "utf8", (err, data) => {
-              if (err) {
-                console.log(err);
-                return;
-              }
-              response.end(data);
-            });
-            break;
-
-          case "/contact-me":
-            fs.readFile(contactPath, "utf8", (err, data) => {
-              if (err) {
-                console.log(err);
-                return;
-              }
-              response.end(data);
-            });
-            break;
-          default:
-            fs.readFile(errorPath, "utf8", (err, data) => {
-              response.writeHead(404, { "content-type": "text/html" });
-              if (err) {
-                console.log(err);
-                return;
-              }
-              response.end(data);
-              return;
-            });
+        if (!pathname) {
+          response.writeHead(400, { "content-type": "text/html" });
+          response.end(page404);
+          return;
         }
+
+        fs.readFile(pathname, "utf8", (err, data) => {
+          if (err) {
+            response.writeHead(400, { "content-type": "text/html" });
+            response.end(page404);
+            console.log(err);
+
+            return;
+          }
+          response.writeHead(200, { "content-type": "text/html" });
+          response.end(data);
+        });
       });
   })
   .listen(8080);
